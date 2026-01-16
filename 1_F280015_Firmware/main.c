@@ -114,7 +114,7 @@ void main(void){
     ConfigureADC();
     ePWM_ADC_Trig();
     SetupADC();
-    //InitLEDGPIOs();
+    InitLEDGPIOs();
 
 
     InitCpuTimers();
@@ -369,6 +369,7 @@ float Temp_MeasF=0;
 int16_t ConvCTRL, ConvCTRL_cnt1, ConvCTRL_cnt2, ConvStatus;
 
 int16_t MEP_Cnt;
+uint16_t LED_CNT, TOG1_CNT, TOG2_CNT;
  
 __interrupt void adcC1ISR(void){
 
@@ -491,6 +492,83 @@ __interrupt void adcC1ISR(void){
         }
 
     }
+
+    // LED control
+        if (Conv_EN == 1){
+            LED_GREEN_ON();
+            LED_RED_OFF();
+        }
+        else if (TempProt == 1){
+            LED_GREEN_OFF();
+            LED_RED_ON();
+        }
+        else if (I_prot == 1){
+
+            // Increase and reset LED counter
+            LED_CNT++;
+            if (LED_CNT > LED_CNT_C){
+                LED_CNT = 0;
+                TOG2_CNT++;
+            }
+            if (TOG2_CNT > 0) {
+                LED_Green_Toggle();
+                LED_Red_Toggle();
+                TOG2_CNT = 0;
+            }
+
+        }
+        else if (Vprot_UVP == 1){
+            LED_GREEN_OFF();
+            // Increase and reset LED counter
+            LED_CNT++;
+            if (LED_CNT > LED_CNT_C){
+                LED_CNT = 0;
+                TOG2_CNT++;
+            }
+            if (TOG2_CNT > 1) {
+                LED_Red_Toggle();
+                TOG2_CNT = 0;
+            }
+        }
+        else if (Vprot_OVP == 1){
+            LED_GREEN_OFF();
+            // Increase and reset LED counter
+            LED_CNT++;
+            if (LED_CNT > LED_CNT_C){
+                LED_CNT = 0;
+                TOG2_CNT++;
+            }
+            if (TOG2_CNT > 0) {
+                LED_Red_Toggle();
+                TOG2_CNT = 0;
+            }
+        }
+        else if (Vin_OVP == 1){
+            LED_RED_OFF();
+            // Increase and reset LED counter
+            LED_CNT++;
+            if (LED_CNT > LED_CNT_C){
+                LED_CNT = 0;
+                TOG2_CNT++;
+            }
+            if (TOG2_CNT > 0) {
+                LED_Green_Toggle();
+                TOG2_CNT = 0;
+            }
+        }
+        else if (Vin_UVP == 1){
+            LED_RED_OFF();
+            // Increase and reset LED counter
+            LED_CNT++;
+            if (LED_CNT > LED_CNT_C){
+                LED_CNT = 0;
+                TOG2_CNT++;
+            }
+            if (TOG2_CNT > 1) {
+                LED_Green_Toggle();
+                TOG2_CNT = 0;
+            }
+        }
 
     // Acknowledge the interrupt
     AdccRegs.ADCINTFLGCLR.bit.ADCINT1 = 1; //make sure INT1 flag is cleared
